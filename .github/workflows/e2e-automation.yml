@@ -79,8 +79,8 @@ jobs:
           r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
           r2-secret-access-key: ${{ secrets.R2_ACCESS_SECRET_KEY }}
           r2-bucket: ${{ secrets.R2_BUCKET }}
-          source-dir: /
-#          destination-dir: ./
+          source-dir: allure-history/allure-results
+          destination-dir: /
 
       - name: Add allure link status check
         if: always()
