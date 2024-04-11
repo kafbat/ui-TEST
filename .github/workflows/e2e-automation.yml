@@ -75,7 +75,7 @@ jobs:
           secret_access_key: ${{ secrets.R2_ACCESS_SECRET_KEY }}
           bucket: ${{ secrets.R2_BUCKET }}
           file: allure-history/allure-results
-          destination: '/'
+          #destination: '/'
 
       - name: Add allure link status check
         if: always()
