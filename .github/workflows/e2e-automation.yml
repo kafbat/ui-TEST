@@ -69,7 +69,7 @@ jobs:
           gh_pages: allure-results
           allure_report: allure-report
           subfolder: allure-results
-          report_url: "http://kafkaui-allure-reports.s3-website.eu-central-1.amazonaws.com"
+          report_url: "https://reports.kafbat.dev"
 
       - name: Upload allure report to R2
         if: always()
@@ -90,7 +90,7 @@ jobs:
           context: "Click Details button to view Allure report"
           state: "success"
           sha: ${{ github.sha }}
-          target_url: http://kafkaui-allure-reports.s3-website.eu-central-1.amazonaws.com/${{ github.run_number }}
+          target_url: https://reports.kafbat.dev/${{ github.run_number }}
 
       - name: Dump Docker logs on failure
         if: failure()
