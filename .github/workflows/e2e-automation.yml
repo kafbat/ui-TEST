@@ -67,15 +67,15 @@ jobs:
           report_url: "http://kafkaui-allure-reports.s3-website.eu-central-1.amazonaws.com"
 
       - name: Upload allure report to R2
-        uses: magicwallet/r2-upload@main
         if: always()
+        uses: ryand56/r2-upload-action@latest
         with:
-          endpoint: ${{ secrets.R2_ENDPOINT }}
-          access_key_id: ${{ secrets.R2_ACCESS_KEY_ID }}
-          secret_access_key: ${{ secrets.R2_ACCESS_SECRET_KEY }}
-          bucket: ${{ secrets.R2_BUCKET }}
-          file: allure-history/allure-results
-          #destination: '/'
+          r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}
+          r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
+          r2-secret-access-key: ${{ secrets.R2_ACCESS_SECRET_KEY }}
+          r2-bucket: ${{ secrets.R2_BUCKET }}
+          source-dir: allure-history/allure-results
+#          destination-dir: ./
 
       - name: Add allure link status check
         if: always()
