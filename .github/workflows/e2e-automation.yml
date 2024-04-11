@@ -56,12 +56,16 @@ jobs:
           ./mvnw -B -ntp versions:set -DnewVersion=${{ github.sha }}
           ./mvnw -B -V -ntp -Dsurefire.suiteXmlFiles='src/test/resources/${{ github.event.inputs.test_suite }}.xml' -Dsuite=${{ github.event.inputs.test_suite }} -f 'e2e-tests' test -Pprod
 
+      - name: bruh
+        run: |
+          ls -la ./e2e-tests/target/allure-results
+
       - name: Generate Allure report
         uses: simple-elf/allure-report-action@master
         if: always()
         id: allure-report
         with:
-          allure_results: ./e2e-tests/allure-results
+          allure_results: ./e2e-tests/target/allure-results
           gh_pages: allure-results
           allure_report: allure-report
           subfolder: allure-results
