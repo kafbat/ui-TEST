@@ -14,6 +14,7 @@ on:
 
 permissions:
   contents: read
+  statuses: write
 
 jobs:
   build-and-test:
