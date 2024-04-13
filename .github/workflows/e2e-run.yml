@@ -26,12 +26,6 @@ jobs:
           token: ${{ github.token }}
           ref: ${{ inputs.sha }}
 
-      - name: Pull chrome docker image
-        id: pull_chrome
-        run: |
-          docker pull selenoid/vnc_chrome:103.0
-        # TODO https://github.com/marketplace/actions/docker-cache
-
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
@@ -45,6 +39,13 @@ jobs:
           ./mvnw -B -ntp versions:set -DnewVersion=${{ inputs.sha }}
           ./mvnw -B -V -ntp clean install -Pprod -Dmaven.test.skip=true
 
+      - name: Upload maven artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts
+          path: ~/.m2/repository/io/kafbat/ui/**/*
+          retention-days: 7
+
       - name: Dump docker image
         run: |
           docker image save ghcr.io/kafbat/kafka-ui:latest > /tmp/image.tar
@@ -54,6 +55,7 @@ jobs:
         with:
           name: image
           path: /tmp/image.tar
+          retention-days: 7
 
   tests:
     runs-on: ubuntu-latest
@@ -64,6 +66,17 @@ jobs:
         with:
           token: ${{ github.token }}
           ref: ${{ inputs.sha }}
+
+      - name: Download maven artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: artifacts
+          path: ~/.m2/repository
+
+      - name: TEST #TODO
+        run: |
+          ls -la ~/.m2/repository/io/kafbat || exit 0
+          ls -la ~/.m2/repository/io/kafbat/ui || exit 0
 
       - name: Download docker image
         uses: actions/download-artifact@v4
@@ -77,12 +90,10 @@ jobs:
 
       - name: Compose up
         # TODO cache these as well
+        # TODO https://github.com/marketplace/actions/docker-cache
         id: compose_app
         # use the following command until #819 will be fixed
-        # TODO clean cmds
         run: |
-          pwd
-          ls -la
           docker-compose -f ./e2e-tests/selenoid/selenoid-ci.yaml up -d
           docker-compose -f ./documentation/compose/e2e-tests.yaml up -d
 
@@ -100,6 +111,7 @@ jobs:
         with:
           name: reports
           path: ./e2e-tests/target/allure-results
+          retention-days: 7
 
   reports:
     runs-on: ubuntu-latest
