@@ -60,6 +60,11 @@ jobs:
     needs: build
     steps:
 
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ github.token }}
+          ref: ${{ inputs.sha }}
+
       - name: Download docker image
         uses: actions/download-artifact@v4
         with:
@@ -74,6 +79,7 @@ jobs:
         # TODO cache these as well
         id: compose_app
         # use the following command until #819 will be fixed
+        # TODO clean cmds
         run: |
           pwd
           ls -la
