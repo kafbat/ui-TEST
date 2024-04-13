@@ -14,84 +14,11 @@ on:
 
 permissions:
   contents: read
+  checks: write
   statuses: write
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
-    steps:
-
-      - uses: actions/checkout@v4
-        with:
-          token: ${{ github.token }}
-          ref: ${{ github.sha }}
-
-      - name: Pull with Docker
-        id: pull_chrome
-        run: |
-          docker pull selenoid/vnc_chrome:103.0
-
-      - name: Set up JDK
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'zulu'
-          cache: 'maven'
-
-      - name: Build with Maven
-        id: build_app
-        run: |
-          ./mvnw -B -ntp versions:set -DnewVersion=${{ github.sha }}
-          ./mvnw -B -V -ntp clean install -Pprod -Dmaven.test.skip=true ${{ github.event.inputs.extraMavenOptions }}
-
-      - name: Compose with Docker
-        id: compose_app
-        # use the following command until #819 will be fixed
-        run: |
-          docker-compose -f e2e-tests/selenoid/selenoid-ci.yaml up -d
-          docker-compose -f ./documentation/compose/e2e-tests.yaml up -d
-
-      - name: Run test suite
-        run: |
-          ./mvnw -B -ntp versions:set -DnewVersion=${{ github.sha }}
-          ./mvnw -B -V -ntp -Dsurefire.suiteXmlFiles='src/test/resources/${{ github.event.inputs.test_suite }}.xml' -Dsuite=${{ github.event.inputs.test_suite }} -f 'e2e-tests' test -Pprod
-
-      - name: bruh
-        run: |
-          ls -la ./e2e-tests/target/allure-results
-
-      - name: Generate Allure report
-        uses: simple-elf/allure-report-action@master
-        if: always()
-        id: allure-report
-        with:
-          allure_results: ./e2e-tests/target/allure-results
-          gh_pages: allure-results
-          allure_report: allure-report
-          subfolder: allure-results
-          report_url: "https://reports.kafbat.dev"
-
-      - name: Upload allure report to R2
-        if: always()
-        uses: ryand56/r2-upload-action@latest
-        with:
-          r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}
-          r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
-          r2-secret-access-key: ${{ secrets.R2_ACCESS_SECRET_KEY }}
-          r2-bucket: ${{ secrets.R2_BUCKET }}
-          source-dir: allure-history/allure-results
-          destination-dir: .
-
-      - name: Add allure link status check
-        if: always()
-        uses: Sibz/github-status-action@v1.1.6
-        with:
-          authToken: ${{secrets.GITHUB_TOKEN}}
-          context: "Click Details button to view Allure report"
-          state: "success"
-          sha: ${{ github.sha }}
-          target_url: https://reports.kafbat.dev/${{ github.run_number }}
-
-      - name: Dump Docker logs on failure
-        if: failure()
-        uses: jwalton/gh-docker-logs@v2.2.2
+    uses: ./.github/workflows/e2e-run.yml
+    with:
+      suite_name: ${{ github.event.inputs.test_suite }}
