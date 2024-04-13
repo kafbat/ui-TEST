@@ -73,11 +73,6 @@ jobs:
           name: artifacts
           path: ~/.m2/repository/io/kafbat/ui
 
-      - name: TEST #TODO
-        run: |
-          ls -la ~/.m2/repository/io/kafbat || exit 0
-          ls -la ~/.m2/repository/io/kafbat/ui || exit 0
-
       - name: Download docker image
         uses: actions/download-artifact@v4
         with:
@@ -96,6 +91,11 @@ jobs:
         run: |
           docker-compose -f ./e2e-tests/selenoid/selenoid-ci.yaml up -d
           docker-compose -f ./documentation/compose/e2e-tests.yaml up -d
+
+      - name: TEST #TODO
+        run: |
+          ls -la ./e2e-tests || exit 0
+          ls -la ./e2e-tests/target || exit 0
 
       - name: Run test suite
         run: |
