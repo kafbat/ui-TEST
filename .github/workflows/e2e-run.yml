@@ -8,6 +8,9 @@ on:
         default: 'regression'
         required: true
         type: string
+      sha:
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -18,14 +21,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Set commit SHA env var
-        run: |
-          echo "HEAD_SHA=${{ github.event.pull_request.head.sha || github.sha }}" >> $GITHUB_ENV
-
       - uses: actions/checkout@v4
         with:
           token: ${{ github.token }}
-          ref: $HEAD_SHA
+          ref: ${{ inputs.sha }}
 
       - name: Pull chrome docker image
         id: pull_chrome
@@ -43,7 +42,7 @@ jobs:
       - name: Build with Maven
         id: build_app
         run: |
-          ./mvnw -B -ntp versions:set -DnewVersion=$HEAD_SHA
+          ./mvnw -B -ntp versions:set -DnewVersion=${{ inputs.sha }}
           ./mvnw -B -V -ntp clean install -Pprod -Dmaven.test.skip=true
 
       - name: Dump docker image
@@ -81,7 +80,7 @@ jobs:
 
       - name: Run test suite
         run: |
-          ./mvnw -B -ntp versions:set -DnewVersion=$HEAD_SHA
+          ./mvnw -B -ntp versions:set -DnewVersion=${{ inputs.sha }}
           ./mvnw -B -V -ntp -Dsurefire.suiteXmlFiles='src/test/resources/${{ github.event.inputs.test_suite }}.xml' -f 'e2e-tests' test -Pprod
 
       - name: Dump Docker logs on failure
@@ -133,5 +132,5 @@ jobs:
           authToken: ${{secrets.GITHUB_TOKEN}}
           context: "Click Details button to view Allure report"
           state: "success"
-          sha: $HEAD_SHA
+          sha: ${{ inputs.sha }}
           target_url: https://reports.kafbat.dev/${{ github.run_number }}

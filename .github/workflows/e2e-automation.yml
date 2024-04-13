@@ -22,3 +22,4 @@ jobs:
     uses: ./.github/workflows/e2e-run.yml
     with:
       suite_name: ${{ github.event.inputs.test_suite }}
+      sha: ${{ github.sha }}
