@@ -136,7 +136,7 @@ jobs:
 
       - name: Generate Allure report
         uses: simple-elf/allure-report-action@v1.9
-        #if: ${{ github.repository == 'kafbat/kafka-ui' }}
+        if: ${{ github.repository == 'kafbat/kafka-ui' }}
         id: allure-report
         with:
           allure_results: ./e2e-tests/target/allure-results
@@ -146,7 +146,7 @@ jobs:
           report_url: "https://reports.kafbat.dev"
 
       - name: Upload allure report to R2
-        #if: ${{ github.repository == 'kafbat/kafka-ui' }}
+        if: ${{ github.repository == 'kafbat/kafka-ui' }}
         uses: ryand56/r2-upload-action@latest
         with:
           source-dir: allure-history/allure-results
@@ -157,7 +157,7 @@ jobs:
           r2-secret-access-key: ${{ secrets.R2_ACCESS_SECRET_KEY }}
 
       - name: Add allure link status check
-        #if: ${{ github.repository == 'kafbat/kafka-ui' }}
+        if: ${{ github.repository == 'kafbat/kafka-ui' }}
         uses: Sibz/github-status-action@v1.1.6
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
