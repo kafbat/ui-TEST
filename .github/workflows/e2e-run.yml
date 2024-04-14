@@ -21,7 +21,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           token: ${{ github.token }}
           ref: ${{ inputs.sha }}
@@ -62,10 +63,18 @@ jobs:
     needs: build
     steps:
 
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           token: ${{ github.token }}
           ref: ${{ inputs.sha }}
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+          cache: 'maven'
 
       - name: Download maven artifacts
         uses: actions/download-artifact@v4
@@ -87,7 +96,6 @@ jobs:
         uses: ScribeMD/docker-cache@0.5.0
         with:
           key: docker-${{ runner.os }}-${{ hashFiles('./e2e-tests/selenoid/selenoid-ci.yaml', './documentation/compose/e2e-tests.yaml') }}
-        # TODO always a cache miss due to ghcr.io/kafbat/kafka-ui:latest ?
 
       - name: Compose up
         id: compose_app
