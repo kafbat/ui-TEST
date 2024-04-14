@@ -18,6 +18,7 @@ permissions:
 jobs:
   build-and-test:
     uses: ./.github/workflows/e2e-run.yml
+    secrets: inherit
     with:
       suite_name: "smoke"
       sha: ${{ github.event.pull_request.head.sha }}

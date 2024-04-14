@@ -20,6 +20,7 @@ permissions:
 jobs:
   build-and-test:
     uses: ./.github/workflows/e2e-run.yml
+    secrets: inherit
     with:
       suite_name: ${{ github.event.inputs.test_suite }}
       sha: ${{ github.sha }}
