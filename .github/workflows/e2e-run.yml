@@ -94,9 +94,19 @@ jobs:
           name: image
           path: /tmp
 
+      - name: TEST #TODO
+        run: |
+          ls -la ./e2e-tests || exit 0
+          ls -la ./e2e-tests/target || exit 0
+
       - name: Load Docker image
         run: |
           docker load --input /tmp/image.tar
+
+      - name: TEST #TODO
+        run: |
+          ls -la ./e2e-tests || exit 0
+          ls -la ./e2e-tests/target || exit 0
 
       - name: Compose up
         # TODO cache these as well
