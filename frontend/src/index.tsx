@@ -9,7 +9,7 @@ import 'lib/constants';
 import 'theme/index.scss';
 
 const container =
-  document.getElementById('root') || document.createElement('div');
+  document.getElementById('root') || document.createElement('div');//test
 const root = createRoot(container);
 
 root.render(
