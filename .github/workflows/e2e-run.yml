@@ -116,6 +116,7 @@ jobs:
         uses: jwalton/gh-docker-logs@v2.2.2
 
       - name: Upload allure reports artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: reports
