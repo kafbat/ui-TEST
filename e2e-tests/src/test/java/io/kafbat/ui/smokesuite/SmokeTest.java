@@ -43,6 +43,7 @@ public class SmokeTest extends BaseTest {
     verifyElementsCondition(
         Stream.concat(topPanel.getAllEnabledElements().stream(), naviSideBar.getAllMenuButtons().stream())
             .collect(Collectors.toList()), Condition.enabled);
+    Assert.assertEquals(true, false); // TODO REVERT ME
   }
 
   @Test
