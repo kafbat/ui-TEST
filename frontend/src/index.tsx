@@ -10,7 +10,7 @@ import 'theme/index.scss';
 
 const container =
   document.getElementById('root') || document.createElement('div');
-const root = createRoot(container);
+const root = createRoot(container);//test
 
 root.render(
   <Provider store={store}>
