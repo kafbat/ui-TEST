@@ -21,6 +21,6 @@ public class KafkaUiApplication {
     return new SpringApplicationBuilder(KafkaUiApplication.class)
         .initializers(DynamicConfigOperations.dynamicConfigPropertiesInitializer())
         .build()
-        .run(args);
+        .run(args); // pr trigger
   }
 }
