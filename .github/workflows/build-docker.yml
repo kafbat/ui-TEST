@@ -1,5 +1,5 @@
 name: 'Docker Build and Push'
-description: 'Build Docker image and optionally push to ECR'
+description: 'Build Docker image and push to ECR'
 
 inputs:
   tag:
@@ -10,16 +10,12 @@ inputs:
     required: true
   aws-access-key-id:
     description: 'AWS Access Key ID'
-    required: false
+    required: true
     secret: true
   aws-secret-access-key:
     description: 'AWS Secret Access Key'
-    required: false
+    required: true
     secret: true
-  push:
-    description: 'Push the Docker image to ECR'
-    required: false
-    default: 'false'
 
 runs:
   using: "composite"
@@ -39,13 +35,26 @@ runs:
         restore-keys: |
           ${{ runner.os }}-buildx-
 
-    - name: Build Docker image
-      id: docker_build
+    - name: Configure AWS credentials for Kafka-UI account
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-region: us-east-1
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+      with:
+        registry-type: 'public'
+
+    - name: Build and push Docker image
+      id: docker_build_and_push
       uses: docker/build-push-action@v5
       with:
         builder: ${{ steps.buildx.outputs.name }}
         context: api
-        push: ${{ inputs.push == 'true' }}
+        push: true
         tags: public.ecr.aws/kafbat/kafka-ui-custom-build:${{ inputs.tag }}
         build-args: |
           JAR_FILE=api-${{ inputs.version }}.jar
