@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build:
-    if: ${{ github.event.label.name == 'status/image_testing' }}
+    # if: ${{ github.event.label.name == 'status/image_testing' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
