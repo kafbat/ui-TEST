@@ -1,0 +1,11 @@
+name: Print Env Vars
+
+on:
+  workflow_dispatch:
+
+jobs:
+  print-env-vars:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print Environment Variables
+        run: env
