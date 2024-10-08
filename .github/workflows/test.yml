@@ -8,4 +8,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Print Environment Variables
-        run: env
+        run: |
+          echo "ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}"
