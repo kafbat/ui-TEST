@@ -19,7 +19,7 @@ public class KafkaUiApplication {
 
   public static ConfigurableApplicationContext startApplication(String[] args) {
     return new SpringApplicationBuilder(KafkaUiApplication.class)
-        .initializers(DynamicConfigOperations.dynamicConfigPropertiesInitializer())
+        .initializers(DynamicConfigOperations.dynamicConfigPropertiesInitializer()) // test
         .build()
         .run(args);
   }
