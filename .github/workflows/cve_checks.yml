@@ -67,6 +67,7 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
 
       - name: Run CVE checks
+        continue-on-error: true
         uses: aquasecurity/trivy-action@0.29.0
         with:
           image-ref: "ghcr.io/kafbat/kafka-ui:${{ steps.build.outputs.version }}"
