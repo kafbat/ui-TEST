@@ -17,7 +17,7 @@ public class KafkaUiApplication {
     startApplication(args);
   }
 
-  public static ConfigurableApplicationContext startApplication(String[] args) {
+  public static ConfigurableApplicationContext startApplication(String[] args) { // yolo
     return new SpringApplicationBuilder(KafkaUiApplication.class)
         .initializers(DynamicConfigOperations.dynamicConfigPropertiesInitializer())
         .build()
