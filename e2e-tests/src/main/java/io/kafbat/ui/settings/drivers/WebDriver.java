@@ -39,7 +39,7 @@ public abstract class WebDriver {
         .addArguments("--disable-gpu")
         .addArguments("--no-sandbox")
         .addArguments("--lang=en_US");
-    if (BaseSource.SELENOID) {
+    if (false) {
       Configuration.remote = BaseSource.REMOTE_URL;
       Configuration.remoteConnectionTimeout = 180000;
       Configuration.remoteReadTimeout = 180000;
