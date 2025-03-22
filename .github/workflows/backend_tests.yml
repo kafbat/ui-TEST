@@ -2,11 +2,6 @@ name: "Backend: tests & sonar"
 
 on:
   workflow_call:
-    inputs:
-      event_name:
-        description: 'Original github.event_name'
-        required: true
-        type: string
 
 permissions:
   contents: read
