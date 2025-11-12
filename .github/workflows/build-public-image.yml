@@ -2,80 +2,108 @@ name: "Infra: Image Testing: Deploy"
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Custom tag to use when manually publishing an image'
+        required: false
   pull_request:
     types: ['labeled']
 
 permissions:
-  id-token: write
   contents: read
   pull-requests: write
+  packages: write
 
 jobs:
-  build:
-    if: ${{ github.event.label.name == 'status/image_testing' }}
+  metadata:
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.label.name == 'status/image_testing') }}
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.collect.outputs.tag }}
+      sha: ${{ steps.collect.outputs.sha }}
     steps:
-      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # infered from @v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          token: ${{ github.token }}
-      - name: get branch name
-        id: extract_branch
+      - id: collect
         run: |
-          tag='${{ github.event.pull_request.number }}'
-          echo "tag=${tag}" >> $GITHUB_OUTPUT
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "tag=pr${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+            echo "sha=${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
+          else
+            manual_tag="${{ github.event.inputs.tag }}"
+            if [ -z "$manual_tag" ]; then
+              manual_tag="manual-${GITHUB_RUN_ID}"
+            fi
+            echo "tag=$manual_tag" >> $GITHUB_OUTPUT
+            echo "sha=${{ github.sha }}" >> $GITHUB_OUTPUT
+          fi
+
+  jar-build:
+    needs: metadata
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.build.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # infered from @v4
+        with:
+          ref: ${{ needs.metadata.outputs.sha }}
+          token: ${{ github.token }}
+
       - name: Set up JDK
         uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # infered from @v4
         with:
           java-version: '21'
           distribution: 'zulu'
           cache: 'gradle'
-      - name: Build
+
+      - name: Build jar
         id: build
         run: |
-          ./mvnw -B -ntp versions:set -DnewVersion=$GITHUB_SHA
-          ./mvnw -B -V -ntp clean package -Pprod -DskipTests
-          export VERSION=$(./mvnw -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # infered from @v3
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # infered from @v3
-      - name: Cache Docker layers
-        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # infered from @v4
+          version=${{ needs.metadata.outputs.tag }}
+          echo "version=$version" >> $GITHUB_OUTPUT
+          ./gradlew clean build \
+            -x test \
+            -Pinclude-frontend=true \
+            -Pversion=$version
+
+      - name: Upload jar
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # infered from @v4
         with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502  # infered from @v4
-        with:
-          aws-region: us-east-1
-          role-to-assume: ${{ secrets.AWS_ROLE }}
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@9238dd443b7a5941caf19ffbe68be34d4dbd61df # infered from @v4
-        with:
-          registry-type: 'public'
-      - name: Build and push
-        id: docker_build_and_push
-        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # infered from @v6
-        with:
-          builder: ${{ steps.buildx.outputs.name }}
-          context: api
-          push: true
-          tags: ${{ vars.ECR_REGISTRY }}/${{ github.repository }}:${{ steps.extract_branch.outputs.tag }}
-          build-args: |
-            JAR_FILE=build/libs/api-${{ steps.build.outputs.version }}.jar
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
-      - name: make comment with private deployment link
+          name: kafbat-ui-${{ steps.build.outputs.version }}
+          path: api/build/libs/api-${{ steps.build.outputs.version }}.jar
+          retention-days: 1
+
+  docker-build:
+    needs: [ metadata, jar-build ]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/docker_build.yml
+    secrets: inherit
+    with:
+      sha: ${{ needs.metadata.outputs.sha }}
+      version: ${{ needs.jar-build.outputs.version }}
+
+  docker-deploy:
+    needs: [ metadata, jar-build, docker-build ]
+    permissions:
+      packages: write
+    uses: ./.github/workflows/docker_publish.yml
+    secrets: inherit
+    with:
+      version: ${{ needs.jar-build.outputs.version }}
+      generic_tag: ${{ needs.metadata.outputs.tag }}
+      registries: '["ghcr.io"]'
+      repository: ${{ format('{0}/kafbat-ui-features', github.repository_owner) }}
+
+  notify:
+    needs: [ metadata, docker-deploy ]
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: make comment with image link
         uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # infered from @v4
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            Image published at ${{ vars.ECR_REGISTRY }}/${{ github.repository }}:${{ steps.extract_branch.outputs.tag }}
-    outputs:
-      tag: ${{ steps.extract_branch.outputs.tag }}
+            Image published at ghcr.io/${{ format('{0}/kafbat-ui-features', github.repository_owner) }}:${{ needs.metadata.outputs.tag }}

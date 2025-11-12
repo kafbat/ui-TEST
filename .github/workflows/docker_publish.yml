@@ -9,6 +9,16 @@ on:
       generic_tag:
         required: true
         type: string
+      registries:
+        description: 'JSON array of registries to publish images to'
+        required: false
+        default: '["docker.io","ghcr.io","ecr"]'
+        type: string
+      repository:
+        description: 'Override container repository (e.g. owner/image or repo name for ECR)'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   packages: write
@@ -20,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        registry: [ 'docker.io', 'ghcr.io', 'ecr' ]
+        registry: ${{ fromJSON(inputs.registries) }}
 
     runs-on: ubuntu-latest
     steps:
@@ -78,12 +88,23 @@ jobs:
 
       - name: Set container registry env vars
         run: |
-          if [ "${{ matrix.registry }}" == "ecr" ]; then
+          registry="${{ matrix.registry }}"
+          repository_override="${{ inputs.repository }}"
+
+          if [ "$registry" == "ecr" ]; then
             echo "REGISTRY=${{ vars.ECR_REGISTRY }}" >> $GITHUB_ENV
-            echo "REPOSITORY=$(basename ${{ github.repository }})" >> $GITHUB_ENV
+            if [ -n "$repository_override" ]; then
+              echo "REPOSITORY=$repository_override" >> $GITHUB_ENV
+            else
+              echo "REPOSITORY=$(basename ${{ github.repository }})" >> $GITHUB_ENV
+            fi
           else
-            echo "REGISTRY=${{ matrix.registry }}" >> $GITHUB_ENV
-            echo "REPOSITORY=${{ github.repository }}" >> $GITHUB_ENV
+            echo "REGISTRY=$registry" >> $GITHUB_ENV
+            if [ -n "$repository_override" ]; then
+              echo "REPOSITORY=$repository_override" >> $GITHUB_ENV
+            else
+              echo "REPOSITORY=${{ github.repository }}" >> $GITHUB_ENV
+            fi
           fi
 
       - name: Push images to ${{ matrix.registry }}
