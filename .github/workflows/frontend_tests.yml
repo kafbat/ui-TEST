@@ -55,7 +55,7 @@ jobs:
           pnpm test:CI
 
       - name: "Upload coverage to Codecov"
-        uses: codecov/codecov-action@18283e04ce6e62d37312384ff67ab1f96a6ff303 # https://github.com/codecov/codecov-action/releases/tag/v5.4.3
+        uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24 # https://github.com/codecov/codecov-action/releases/tag/v5.4.3
         with:
           files: frontend/coverage/lcov.info
           flags: frontend
