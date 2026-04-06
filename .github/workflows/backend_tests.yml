@@ -31,3 +31,10 @@ jobs:
       - name: "Tests"
         run: |
           ./gradlew :api:test
+
+      - name: "Upload coverage to Codecov"
+        uses: codecov/codecov-action@18283e04ce6e62d37312384ff67ab1f96a6ff303 # https://github.com/codecov/codecov-action/releases/tag/v5.4.3
+        with:
+          files: api/build/reports/jacoco/test/jacocoTestReport.xml
+          flags: backend
+          fail_ci_if_error: false

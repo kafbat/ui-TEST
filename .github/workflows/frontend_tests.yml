@@ -54,4 +54,9 @@ jobs:
           cd frontend/
           pnpm test:CI
 
-      # TODO check frontend sonar results in sonarcloud after migration to gradle
+      - name: "Upload coverage to Codecov"
+        uses: codecov/codecov-action@18283e04ce6e62d37312384ff67ab1f96a6ff303 # https://github.com/codecov/codecov-action/releases/tag/v5.4.3
+        with:
+          files: frontend/coverage/lcov.info
+          flags: frontend
+          fail_ci_if_error: false
