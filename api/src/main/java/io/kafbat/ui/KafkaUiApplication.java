@@ -18,7 +18,7 @@ public class KafkaUiApplication {
     startApplication(args);
   }
 
-  public static void startApplication(String[] args) {
+  public static void startApplication(String[] args) { // TEST goes brr
     Security.addProvider(new SkipSecurityProvider());
 
     new SpringApplicationBuilder(KafkaUiApplication.class)
